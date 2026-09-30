@@ -9,9 +9,10 @@
   "scripts": {
     "build": "npm run build --workspace apps/desktop",
     "package": "npm run builder --workspace apps/desktop -- --win nsis --x64 --publish never",
-    "test:focused": "npm exec --workspace apps/desktop -- vitest run src/app/settings/model-settings.test.tsx src/app/settings/endpoint-presets.test.ts src/app/contrib/session-rpc-dispatcher.test.ts electron/distribution-updates.test.ts scripts/storage-core.test.mjs scripts/account-core.test.mjs",
+    "test:focused": "npm exec --workspace apps/desktop -- vitest run src/app/settings/model-settings.test.tsx src/app/settings/endpoint-presets.test.ts src/app/contrib/session-rpc-dispatcher.test.ts electron/distribution-updates.test.ts scripts/storage-core.test.mjs scripts/account-core.test.mjs src/app/session/hooks/use-model-controls.test.tsx",
     "test:packaged": "npm exec --workspace apps/desktop -- tsx scripts/verify-personal.ts",
-    "upstream:check": "node scripts/check-upstream.mjs"
+    "upstream:check": "node scripts/check-upstream.mjs",
+    "test:unified-models": "npm exec --workspace apps/desktop -- tsx scripts/verify-unified-models.ts"
   },
   "repository": {
     "type": "git",

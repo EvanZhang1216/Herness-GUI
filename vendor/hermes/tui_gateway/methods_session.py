@@ -308,6 +308,8 @@ def _(rid, params: dict) -> dict:
     # ``profile`` (app-global remote mode): stored so the build and every turn re-bind HERMES_HOME.
     profile_home = _profile_home(profile := (params.get("profile") or "").strip() or None)
     session_model_override, create_reasoning_override, create_service_tier_override = _create_overrides(params)
+    if source == "desktop":
+        session_model_override = create_reasoning_override = create_service_tier_override = None
     now = time.time()
     with _sessions_lock:
         _sessions[sid] = {
@@ -698,7 +700,7 @@ def _resume_lazy(ctx: _Resume) -> dict:
 def _resume_deferred(ctx: _Resume) -> dict:
     """Bounded ack; the transcript hydrates in the background (the ONE history read) and pages over REST."""
     sid, source, cwd = ctx.mint()
-    overrides = _stored_session_runtime_overrides(ctx.found)
+    overrides = ({} if source == "desktop" else _stored_session_runtime_overrides(ctx.found))
     record = ctx.record(source, cwd, [], overrides)
     record.update(resume_history_ready=threading.Event(), resume_hydrating=True,
                   resume_message_count=int(ctx.found.get("message_count") or 0))
@@ -720,7 +722,7 @@ def _resume_cold(ctx: _Resume) -> dict:
         history, display_history, raw_history = ctx.restore()
     except Exception as e:
         return _err(ctx.rid, 5000, f"resume failed: {e}")
-    overrides = _stored_session_runtime_overrides(ctx.found)
+    overrides = ({} if source == "desktop" else _stored_session_runtime_overrides(ctx.found))
     record = ctx.record(source, cwd, history, overrides, display_history_prefix=ctx.display_prefix(),
                         todo_state=_todo_state_from_history(history))
     if (reused := ctx.claim(sid, record)) is not None:
@@ -741,7 +743,7 @@ def _resume_eager(ctx: _Resume) -> dict:
             display_history_prefix = ctx.display_prefix()
             # Profile db so turns persist to the right state.db; stored runtime identity so switching chats does
             # not inherit another chat's global model.
-            stored_runtime_overrides = _stored_session_runtime_overrides(ctx.found)
+            stored_runtime_overrides = ({} if source == "desktop" else _stored_session_runtime_overrides(ctx.found))
             agent = _make_agent_in_context(
                 sid, ctx.target, session_db=ctx.db, platform_override=source,
                 context_cwd_is_launch_artifact=(source in _LAUNCH_CWD_NOT_A_WORKSPACE and not ctx.profile_resume_cwd),

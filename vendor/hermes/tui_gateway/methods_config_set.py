@@ -109,6 +109,14 @@ def _set_model(rid, params, key, value, session):
     if not value:
         return _err(rid, 4002, "model value required")
     confirmed = bool(params.get("confirm_expensive_model", False))
+    if session and session.get("source") == "desktop":
+        with _session_profile_runtime_scope(session):
+            result = _apply_model_switch("", {"agent": None}, value,
+                                         confirm_expensive_model=confirmed,
+                                         pin_session_override=False, persist_override=True)
+        return _kv(rid, key, result["value"], warning=result["warning"],
+                   confirm_required=result.get("confirm_required", False),
+                   confirm_message=result.get("confirm_message", ""), scope="global")
     if session:
         from hermes_cli.model_switch import parse_model_switch_args
         sid = params.get("session_id", "")

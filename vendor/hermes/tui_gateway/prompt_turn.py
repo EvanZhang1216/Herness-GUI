@@ -444,6 +444,9 @@ def _prepare_turn_input(sid: str, session: dict, st: _TurnRun, text: Any, images
     scopes.approval = set_current_session_key(session["session_key"])
     scopes.session_tokens = _set_session_context(session["session_key"], ui_session_id=sid)
     profile_home = session.get("profile_home")
+    if not profile_home and session.get("source") == "desktop":
+        from hermes_constants import get_hermes_home
+        profile_home = str(get_hermes_home())
     if profile_home:
         scopes.home = set_hermes_home_override(profile_home)
         scopes.secret = set_secret_scope(build_profile_secret_scope(Path(profile_home)))

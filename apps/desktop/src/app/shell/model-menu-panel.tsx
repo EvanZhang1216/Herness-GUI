@@ -79,13 +79,13 @@ export function ModelMenuPanel({
   // back to the catalog's reported current, and a non-reactive read would
   // never repaint that fallback once the catalog resolved.
   const modelOptions = useQuery({
-    queryKey: modelOptionsQueryKey(profile, activeSessionId, ownerConnectionId),
+    queryKey: modelOptionsQueryKey(profile, null, ownerConnectionId),
     queryFn: (): Promise<ModelOptionsResponse> =>
-      requestModelOptions({ gateway, profile, request: requestGateway, sessionId: activeSessionId })
+      requestModelOptions({ gateway, profile, request: requestGateway, sessionId: null })
   })
 
   const { model: optionsModel, provider: optionsProvider } = currentPickerSelection(
-    { model: currentModel, provider: currentProvider },
+    { model: modelOptions.data?.model || currentModel, provider: modelOptions.data?.provider || currentProvider },
     modelOptions.data
   )
 
@@ -213,10 +213,7 @@ export function ModelMenuPanel({
 
     presetFor: (provider, model) => modelPresets[modelPresetKey(provider, model)] ?? {},
 
-    // The composer picker never persists the profile default. With a session it
-    // scopes the switch to that session; with none it's UI state shipped on the
-    // next session.create. Always stamp sessionId from this surface so a tile
-    // switch never hits the primary (busy) session by accident.
+    // The picker writes the shared profile setting; sessionId identifies its UI surface.
     select: (model, provider) => onSelectModel({ model, provider, sessionId: activeSessionId || null }),
 
     setOptions: (patch, row) => {
@@ -243,27 +240,29 @@ export function ModelMenuPanel({
   }
 
   return (
-    <ModelCatalogMenu
-      controller={controller}
-      footer={
-        <DropdownMenuItem
-          className={cn(dropdownMenuRow, 'text-(--ui-text-tertiary)')}
-          disabled={refreshing}
-          onSelect={event => {
-            event.preventDefault()
-            void refreshModels()
-          }}
-        >
-          <Codicon className={cn(refreshing && 'animate-spin')} name="sync" size="0.75rem" />
-          {copy.refreshModels}
-        </DropdownMenuItem>
-      }
-      gateway={gateway}
-      includeMoa
-      ownerConnectionId={ownerConnectionId}
-      profile={profile}
-      request={requestGateway}
-      sessionId={activeSessionId}
-    />
+    <>
+      <div className="px-3 py-2 text-xs text-muted-foreground">统一模型 · 对当前账号及配置档案的所有会话生效，下一轮使用</div>
+      <ModelCatalogMenu
+        controller={controller}
+        footer={
+          <DropdownMenuItem
+            className={cn(dropdownMenuRow, 'text-(--ui-text-tertiary)')}
+            disabled={refreshing}
+            onSelect={event => {
+              event.preventDefault()
+              void refreshModels()
+            }}
+          >
+            <Codicon className={cn(refreshing && 'animate-spin')} name="sync" size="0.75rem" />
+            {copy.refreshModels}
+          </DropdownMenuItem>
+        }
+        gateway={gateway}
+        ownerConnectionId={ownerConnectionId}
+        profile={profile}
+        request={requestGateway}
+        sessionId={null}
+      />
+    </>
   )
 }

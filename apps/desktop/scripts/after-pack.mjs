@@ -20,6 +20,7 @@
  */
 
 import path from 'node:path'
+import { execFileSync } from 'node:child_process'
 
 import { stampExeIdentity } from './set-exe-identity.mjs'
 
@@ -31,6 +32,14 @@ export default async function afterPack(context) {
   const productName = context.packager?.appInfo?.productFilename || 'Hermes'
   const exe = path.join(context.appOutDir, `${productName}.exe`)
   const desktopRoot = path.resolve(import.meta.dirname, '..')
+
+  // A working chat is not proof that the bundled tool graph is complete.
+  // Fail packaging on missing modules/providers, using the shipped interpreter.
+  const resources = path.join(context.appOutDir, 'resources')
+  execFileSync(path.join(resources, 'runtime/python/python.exe'), [
+    '-X', 'utf8', path.resolve(desktopRoot, '../../scripts/verify-bundled-tools.py'),
+    path.join(resources, 'hermes')
+  ], { stdio: 'inherit', timeout: 60000, env: { ...process.env, PYTHONPATH: '', PYTHONNOUSERSITE: '1' } })
 
   try {
     await stampExeIdentity(exe, desktopRoot)

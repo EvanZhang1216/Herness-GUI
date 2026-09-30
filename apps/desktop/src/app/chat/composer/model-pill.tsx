@@ -131,7 +131,7 @@ export function ModelPill({
     ? copy.modelTitle(currentProvider, currentModel || copy.modelNone)
     : copy.switchModel
 
-  const title = pinnedOverride ? `${baseTitle} — ${copy.modelPinned}` : baseTitle
+  const title = `${baseTitle} · 统一模型设置（所有会话下一轮生效）`
 
   if (!model.modelMenuContent) {
     return (

@@ -72,3 +72,12 @@ JS-side assertions in vitest (root testing rules). Root TypeScript style rules a
 
 Related: `web/AGENTS.md` (dashboard embeds this TUI over a PTY), `apps/desktop/AGENTS.md` (own
 renderer on the same backend).
+
+## Herness distribution policy
+
+Desktop-source sessions follow their account/profile model configuration. Never restore
+per-session model/provider/endpoint snapshots into desktop inference. Model changes are
+adopted before the next turn, including URL/key changes with unchanged model names.
+Preserve the cached system prompt across transport switches. CLI/TUI behavior and profile
+isolation remain upstream-compatible. Run `npm run test:unified-models` from the distribution
+root against a freshly packaged EXE to exercise real transport, resume and credential routing.

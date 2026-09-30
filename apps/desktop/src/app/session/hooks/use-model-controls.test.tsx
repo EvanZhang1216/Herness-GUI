@@ -163,7 +163,7 @@ describe('useModelControls', () => {
     expect($currentProvider.get()).toBe('deepseek')
   })
 
-  it('keeps a live session authoritative when Settings saves a new profile default', async () => {
+  it('paints the shared setting while the live runtime cache remains unchanged', async () => {
     const queryClient = new QueryClient()
     $activeSessionId.set('runtime-1')
     setCurrentModel('tencent/hy3:free')
@@ -194,9 +194,8 @@ describe('useModelControls', () => {
     result.current.applySavedMainModel('nous', 'poolside/laguna-xs-2.1:free')
     await result.current.refreshCurrentModel()
 
-    // Settings changes the profile default, not the active session. The footer
-    // and its session-scoped picker cache must keep showing the live runtime.
-    expect($currentModel.get()).toBe('tencent/hy3:free')
+    // The selected setting updates now; the running runtime changes next turn.
+    expect($currentModel.get()).toBe('poolside/laguna-xs-2.1:free')
     expect($currentProvider.get()).toBe('nous')
     expect(queryClient.getQueryData(modelOptionsQueryKey('default', 'runtime-1'))).toMatchObject({
       model: 'tencent/hy3:free',
@@ -275,7 +274,7 @@ describe('useModelControls', () => {
     })
   })
 
-  it('sends an active primary-session picker change without a scope flag so the gateway decides persistence', async () => {
+  it('persists a live composer selection globally without mutating a running session', async () => {
     $activeSessionId.set('session-1')
     const requestGateway = vi.fn(async () => ({ key: 'model', value: 'claude-sonnet-4.6' }) as never)
     let controls!: Controls
@@ -289,13 +288,10 @@ describe('useModelControls', () => {
       })
     ).resolves.toBe(true)
 
-    // No hardcoded --global (#90235): resolve_persist_behavior on the gateway
-    // owns the policy — session-only unless model.persist_switch_by_default
-    // is set or no default has ever been configured (#86414's first pick).
+    // Persist once; every conversation adopts this setting before its next turn.
     expect(requestGateway).toHaveBeenCalledWith('config.set', {
-      session_id: 'session-1',
       key: 'model',
-      value: 'claude-sonnet-4.6 --provider anthropic'
+      value: 'claude-sonnet-4.6 --provider anthropic --global'
     })
     expect(requestGateway).not.toHaveBeenCalledWith('slash.exec', expect.anything())
   })
@@ -375,17 +371,14 @@ describe('useModelControls', () => {
     expect(requestGateway).toHaveBeenLastCalledWith('config.set', {
       confirm_expensive_model: true,
       key: 'model',
-      session_id: 'session-1',
-      value: 'muse-spark-1.2-contributor --provider opencode-go'
+      value: 'muse-spark-1.2-contributor --provider opencode-go --global'
     })
     expect($currentModel.get()).toBe('muse-spark-1.2-contributor')
     expect($currentProvider.get()).toBe('opencode-go')
   })
 
-  it('keeps the pick when an OLDER gateway refuses a mid-turn switch', async () => {
-    // Pre-deferral backends answer 4009 instead of parking the pick. Rolling
-    // back would bounce the pill to the old model and toast an error at a user
-    // who did nothing wrong; the pick still applies to the next turn.
+  it('reports an unsuccessful shared write even when a gateway says busy', async () => {
+    // A refused shared write must never be reported as successful.
     $activeSessionId.set('session-1')
     setCurrentModel('fable-5')
     setCurrentProvider('nous')
@@ -398,11 +391,11 @@ describe('useModelControls', () => {
 
     render(<Harness onReady={value => (controls = value)} requestGateway={requestGateway} />)
 
-    await expect(controls.selectModel({ model: 'grok-4.5', provider: 'xai' })).resolves.toBe(true)
+    await expect(controls.selectModel({ model: 'grok-4.5', provider: 'xai' })).resolves.toBe(false)
 
-    expect($currentModel.get()).toBe('grok-4.5')
-    expect($currentProvider.get()).toBe('xai')
-    expect(notifyError).not.toHaveBeenCalled()
+    expect($currentModel.get()).toBe('fable-5')
+    expect($currentProvider.get()).toBe('nous')
+    expect(notifyError).toHaveBeenCalled()
   })
 
   it('still rolls back and reports a real switch failure', async () => {
@@ -425,28 +418,14 @@ describe('useModelControls', () => {
     expect(notifyError).toHaveBeenCalled()
   })
 
-  it('session-scopes MoA preset selections so they cannot persist as the global gateway default', async () => {
-    $activeSessionId.set('session-1')
-    const requestGateway = vi.fn(async () => ({ key: 'model', value: 'BeastMode' }) as never)
-    let controls!: Controls
-
-    render(<Harness onReady={value => (controls = value)} requestGateway={requestGateway} />)
-
-    await expect(
-      controls.selectModel({
-        model: 'BeastMode',
-        provider: 'moa'
-      })
-    ).resolves.toBe(true)
-
-    expect(requestGateway).toHaveBeenCalledWith('config.set', {
-      session_id: 'session-1',
-      key: 'model',
-      value: 'BeastMode --provider moa --session'
-    })
+  it('rejects orchestration presets as shared inference endpoints', async () => {
+    const requestGateway = vi.fn()
+    const { result } = renderHook(() => useModelControls({ queryClient: new QueryClient(), requestGateway }))
+    await expect(result.current.selectModel({ model: 'BeastMode', provider: 'moa' })).resolves.toBe(false)
+    expect(requestGateway).not.toHaveBeenCalled()
   })
 
-  it('stores a no-session pick as UI state with no gateway or global write', async () => {
+  it('persists a draft selection as the shared default', async () => {
     const requestGateway = vi.fn()
     let controls!: Controls
 
@@ -459,12 +438,11 @@ describe('useModelControls', () => {
       })
     ).resolves.toBe(true)
 
-    // The pick is plain UI state; session.create ships it later. Nothing touches
-    // the gateway or the profile default here.
+    // A new-chat selection must be saved, not merely painted.
     expect($currentModel.get()).toBe('claude-sonnet-4.6')
     expect($currentProvider.get()).toBe('anthropic')
-    expect(getCurrentModelSource()).toBe('manual')
-    expect(requestGateway).not.toHaveBeenCalled()
+    expect(getCurrentModelSource()).toBe('default')
+    expect(requestGateway).toHaveBeenCalledWith('config.set', { key: 'model', value: 'claude-sonnet-4.6 --provider anthropic --global' })
     expect(setGlobalModel).not.toHaveBeenCalled()
   })
 
@@ -603,7 +581,7 @@ describe('useModelControls', () => {
 
     expect($currentModel.get()).toBe('claude-sonnet-4.6')
     expect($currentProvider.get()).toBe('anthropic')
-    expect(getCurrentModelSource()).toBe('manual')
+    expect(getCurrentModelSource()).toBe('default')
   })
 
   it('does not let an older profile refresh overwrite a newer profile', async () => {
@@ -680,9 +658,8 @@ describe('useModelControls', () => {
     ).resolves.toBe(true)
 
     expect(requestGateway).toHaveBeenCalledWith('config.set', {
-      session_id: 'runtime-b',
       key: 'model',
-      value: 'tile-model --provider anthropic --session'
+      value: 'tile-model --provider anthropic --global'
     })
     // Primary footer untouched — the busy primary must not absorb a tile pick.
     expect($currentModel.get()).toBe('primary/model')

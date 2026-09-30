@@ -826,7 +826,7 @@ export function ModelSettings({ onMainModelChanged, scopeProfile }: ModelSetting
   return (
     <div className="grid gap-6">
       <section>
-        <p className="mb-3 text-xs text-muted-foreground">{m.appliesDesc}</p>
+        <p className="mb-3 text-xs text-muted-foreground">所有会话统一使用这里的主模型与子智能体配置。旧会话和云端恢复的会话也会跟随；正在回复的会话从下一轮生效。</p>
         <div className="flex flex-wrap items-center gap-2">
           <Select onValueChange={setSelectedProvider} value={selectedProvider}>
             <SelectTrigger className={cn('min-w-40', CONTROL_TEXT)}>

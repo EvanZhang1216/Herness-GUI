@@ -203,6 +203,12 @@ def _apply_model_switch(
     from hermes_cli.model_switch import switch_model
     model_input, explicit_provider, one_turn, persist_global = _switch_request(
         raw_input, parsed_flags, persist_override)
+    if session.get("source") == "desktop":
+        if one_turn:
+            raise ValueError("桌面会话统一使用共享模型设置，不支持单轮模型覆盖。")
+        # Slash commands use this path too. Save now, adopt only at turn boundaries.
+        persist_global, pin_session_override = True, False
+        session = {**session, "agent": None}
     agent = session.get("agent")
     if one_turn and not agent:
         raise ValueError("/model --once requires a live session")
@@ -288,6 +294,10 @@ def _sync_bot_capabilities(sid: str, session: dict) -> None:
 def _sync_agent_model_with_config(sid: str, session: dict) -> None:
     """Adopt a config.yaml model change at turn start (like gateways do per message). Sessions
     pinned with /model keep their choice; a failed switch keeps the current model."""
+    if session.get("source") == "desktop":
+        from tui_gateway.desktop_model_policy import sync_runtime
+        sync_runtime(sid, session)
+        return
     agent = session.get("agent")
     if agent is None or session.get("model_override"):
         return

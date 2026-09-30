@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.2.2 — 2026-09-30
+
+- Share model routing across desktop conversations within the account/profile, including
+  new chats, resumed history and cloud-imported conversations. Ignore stale session
+  provider snapshots that caused missing DeepSeek credentials in otherwise configured apps.
+- Composer model picks save the shared default. Settings explain scope and next-turn
+  activation; ongoing responses finish on their original runtime.
+- Resolve endpoint and credentials at each turn, including changes with the same model
+  name. Preserve the cached system prefix when replacing the inference transport.
+- Retain independent account/profile settings and upstream CLI/TUI routing behavior.
+- Restore the omitted upstream plugins/web tree (all bundled search providers, including
+  Tavily). Packaging now fails if tool imports or declared web-provider registration fail,
+  and verifies Tavily authentication and search against a local HTTP fixture.
+
+
 ## 0.2.1 — 2026-09-30
 
 - Fix installer rejection of sibling data folders such as `D:\Hermes-GUI-data` beside
