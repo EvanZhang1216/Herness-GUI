@@ -2,7 +2,7 @@
   "name": "herness-gui",
   "productName": "Herness GUI",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Native desktop shell for Hermes Agent.",
   "author": "Nous Research",
   "repository": {
@@ -222,7 +222,9 @@
       {
         "from": "sync-client",
         "to": "sync-client",
-        "filter": ["*.py"]
+        "filter": [
+          "*.py"
+        ]
       },
       {
         "from": "build/install-stamp.json",

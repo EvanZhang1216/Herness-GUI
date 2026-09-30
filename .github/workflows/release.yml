@@ -40,6 +40,7 @@ jobs:
           if ($LASTEXITCODE) { throw 'Desktop build failed' }
           npm run package
           if ($LASTEXITCODE) { throw 'Packaging failed' }
+          ./scripts/test-installer-paths.ps1
           npm run test:packaged
           if ($LASTEXITCODE) { throw 'Packaged smoke test failed' }
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

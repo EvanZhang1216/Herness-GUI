@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.1 — 2026-09-30
+
+- Fix installer rejection of sibling data folders such as `D:\Hermes-GUI-data` beside
+  `D:\Hermes-GUI`. Compare directory boundaries after Windows path normalization,
+  including folders that do not yet exist, case differences and dot segments.
+- Keep blocking the application directory and its descendants; translate data-page
+  instructions and errors into Chinese and show both paths in overlap errors.
+- Validate the shared installer function by compiling and executing a real NSIS
+  regression fixture, plus focused tests and the packaged application smoke test.
+
 ## 0.2.0 — 2026-09-30
 
 - Optional username/password/email accounts, with guest mode and isolated account data.
