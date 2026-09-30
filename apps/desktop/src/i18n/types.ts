@@ -51,6 +51,11 @@ interface AuxTaskCopy {
 }
 
 export interface Translations {
+  processingDetails: {
+    title: string
+    running: string
+    steps: (count: number) => string
+  }
   sessionImport: {
     title: string
     subtitle: string

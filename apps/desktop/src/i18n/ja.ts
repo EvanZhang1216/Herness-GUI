@@ -3,6 +3,11 @@ import { defineFieldCopy } from '@/app/settings/field-copy'
 import { defineLocale } from './define-locale'
 
 export const ja = defineLocale({
+  processingDetails: {
+    title: '処理の詳細',
+    running: '処理中…',
+    steps: (count: number) => `${count} 件`
+  },
   sessionImport: {
     title: '別のアプリから続ける',
     subtitle: '会話をHermesに取り込み、続きを始めましょう。',

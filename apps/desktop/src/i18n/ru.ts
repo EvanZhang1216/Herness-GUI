@@ -24,6 +24,11 @@ const RU_NOUN = (count: number | string, one: string, few: string, many: string)
 }
 
 export const ru = defineLocale({
+  processingDetails: {
+    title: 'Ход работы',
+    running: 'Обработка…',
+    steps: (count: number) => `${count} шагов`
+  },
   sessionImport: {
     title: 'Продолжить из другого приложения',
     subtitle: 'Перенесите разговор в Hermes и продолжите с того места, где остановились.',

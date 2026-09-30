@@ -3,6 +3,11 @@ import { defineFieldCopy } from '@/app/settings/field-copy'
 import { defineLocale } from './define-locale'
 
 export const zhHant = defineLocale({
+  processingDetails: {
+    title: '處理過程',
+    running: '正在處理…',
+    steps: (count: number) => `${count} 項記錄`
+  },
   sessionImport: {
     title: '從其他應用程式繼續',
     subtitle: '將對話匯入 Hermes，接著上次的進度繼續。',

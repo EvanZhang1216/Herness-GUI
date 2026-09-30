@@ -3,6 +3,11 @@ import { defineFieldCopy } from '@/app/settings/field-copy'
 import type { Translations } from './types'
 
 export const zh: Translations = {
+  processingDetails: {
+    title: '处理过程',
+    running: '正在处理…',
+    steps: (count: number) => `${count} 项记录`
+  },
   sessionImport: {
     title: '从其他应用继续',
     subtitle: '将对话导入 Hermes，接着上次的进度继续。',

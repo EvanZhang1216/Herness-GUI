@@ -1,6 +1,11 @@
 import { defineLocale } from './define-locale'
 
 export const ar = defineLocale({
+  processingDetails: {
+    title: 'تفاصيل المعالجة',
+    running: 'جارٍ المعالجة…',
+    steps: (count: number) => `${count} خطوات`
+  },
   sessionImport: {
     title: 'المتابعة من تطبيق آخر',
     subtitle: 'انقل محادثة إلى Hermes وتابع من حيث توقفت.',

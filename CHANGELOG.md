@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.4 — 2026-10-01
+
+- Collapse reasoning and routine tool activity into one expandable processing summary per assistant message.
+- Keep answers, interactive tools, generated images and tool errors outside the collapsed details.
+- Preserve transcript data, live progress, and user expansion through stream completion.
+- Verify a real bundled-backend turn with reasoning and three terminal calls, alongside restart and migration.
+
 ## 0.2.3 — 2026-09-30
 
 - Add a prominent Model Settings shortcut directly below New Chat in the sidebar.

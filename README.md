@@ -5,11 +5,12 @@
 - 源码：https://github.com/EvanZhang1216/Herness-GUI
 - 安装与更新：https://github.com/EvanZhang1216/Herness-GUI/releases
 - 上游：https://github.com/NousResearch/hermes-agent
-- 当前版本：0.2.3；初始源码包 2026.9.7，后端版本 0.21.1。来源记录见 upstream.json。
+- 对话中的思考、搜索和工具执行记录集中在默认收起的“处理过程”中；点击展开，正文、交互请求与错误独立显示。
+- 当前版本：0.2.4；初始源码包 2026.9.7，后端版本 0.21.1。来源记录见 upstream.json。
 
 ## 安装与离线范围
 
-下载 Release 中的 `Herness-GUI-Setup-0.2.3-x64.exe`，双击选择安装目录。目标平台 Windows 10/11 x64，其他系统和架构尚未验证。
+下载 Release 中的 `Herness-GUI-Setup-0.2.4-x64.exe`，双击选择安装目录。目标平台 Windows 10/11 x64，其他系统和架构尚未验证。
 
 安装包包含 Electron 界面、Hermes 后端、便携 Python 3.11.15、锁定的核心/Web/MCP/Anthropic 依赖、Node/npm、Git/Bash、uv、ripgrep。安装机不必预装开发环境；Python 所需 VC runtime DLL 随便携发行版提供。安装时不会再下载 Hermes 或 Python。
 

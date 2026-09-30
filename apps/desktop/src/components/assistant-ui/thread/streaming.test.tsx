@@ -605,7 +605,7 @@ describe('assistant-ui streaming renderer', () => {
   it('renders an incomplete streaming reasoning fenced code block as a code card', async () => {
     const { container } = render(<RunningReasoningHarness />)
     const ui = within(container)
-    const thinkingToggle = ui.getByRole('button', { name: /thinking/i })
+    const thinkingToggle = ui.getByRole('button', { name: /processing/i })
 
     if (thinkingToggle.getAttribute('aria-expanded') !== 'true') {
       fireEvent.click(thinkingToggle)
@@ -621,32 +621,21 @@ describe('assistant-ui streaming renderer', () => {
     expect(container.textContent).not.toContain('```ts')
   })
 
-  it('keeps the height-capped thinking preview scrollable after the turn settles', async () => {
+  it('keeps the process collapsed after the turn settles', async () => {
     const { container, settle } = renderSettlingReasoning()
-
-    const live = container.querySelector('[data-slot="aui_thinking-body"]')?.className ?? ''
-
-    expect(live).toContain('max-h-40')
-    expect(live).toMatch(/\boverflow-auto\b/)
-    expect(live).not.toMatch(/\boverflow-hidden\b/)
-
+    expect(container.querySelector('[data-slot="aui_reasoning-text"]')?.closest('[hidden]')).toBeTruthy()
     settle()
-
     await waitFor(() => {
-      expect(within(container).getByRole('button', { name: /thought/i })).toBeTruthy()
+      expect(within(container).getByRole('button', { name: /processing/i }).getAttribute('aria-expanded')).toBe('false')
     })
-
-    const settled = container.querySelector('[data-slot="aui_thinking-body"]')?.className ?? ''
-
-    expect(settled).toContain('max-h-40')
-    expect(settled).toMatch(/\boverflow-auto\b/)
-    expect(settled).not.toMatch(/\boverflow-hidden\b/)
+    expect(container.querySelector('[data-slot="aui_reasoning-text"]')?.closest('[hidden]')).toBeTruthy()
   })
 
   it('does not collapse a live thinking preview when the turn settles', async () => {
     const { container, settle } = renderSettlingReasoning()
-    const toggle = within(container).getByRole('button', { name: /thinking/i })
+    const toggle = within(container).getByRole('button', { name: /processing/i })
 
+    fireEvent.click(toggle)
     expect(toggle.getAttribute('aria-expanded')).toBe('true')
     expect(container.querySelector('[data-slot="aui_reasoning-text"]')).toBeTruthy()
 
@@ -655,7 +644,7 @@ describe('assistant-ui streaming renderer', () => {
     await waitFor(() => {
       expect(
         within(container)
-          .getByRole('button', { name: /thought/i })
+          .getByRole('button', { name: /processing/i })
           .getAttribute('aria-expanded')
       ).toBe('true')
     })
@@ -669,7 +658,7 @@ describe('assistant-ui streaming renderer', () => {
 
     expect(
       within(container)
-        .getByRole('button', { name: /thinking/i })
+        .getByRole('button', { name: /processing/i })
         .getAttribute('aria-expanded')
     ).toBe('false')
 
@@ -678,21 +667,21 @@ describe('assistant-ui streaming renderer', () => {
     await waitFor(() => {
       expect(
         within(container)
-          .getByRole('button', { name: /thought/i })
+          .getByRole('button', { name: /processing/i })
           .getAttribute('aria-expanded')
       ).toBe('false')
     })
-    expect(container.querySelector('[data-slot="aui_reasoning-text"]')).toBeNull()
+    expect(container.querySelector('[data-slot="aui_reasoning-text"]')?.closest('[hidden]')).toBeTruthy()
   })
 
   it('keeps streaming reasoning collapsed by default when the preference is enabled', () => {
     $reasoningCollapsedByDefault.set(true)
 
     const { container } = render(<RunningReasoningHarness />)
-    const thinkingToggle = within(container).getByRole('button', { name: /thinking/i })
+    const thinkingToggle = within(container).getByRole('button', { name: /processing/i })
 
     expect(thinkingToggle.getAttribute('aria-expanded')).toBe('false')
-    expect(container.querySelector('[data-slot="aui_reasoning-text"]')).toBeNull()
+    expect(container.querySelector('[data-slot="aui_reasoning-text"]')?.closest('[hidden]')).toBeTruthy()
 
     fireEvent.click(thinkingToggle)
 
@@ -704,8 +693,8 @@ describe('assistant-ui streaming renderer', () => {
     const { container } = render(<ReasoningHarness />)
     const ui = within(container)
 
-    // Settled, so the header is past tense — a running block says "Thinking".
-    fireEvent.click(ui.getByRole('button', { name: /thought/i }))
+    // The process disclosure also covers historical reasoning.
+    fireEvent.click(ui.getByRole('button', { name: /processing/i }))
 
     expect(container.querySelector('[data-slot="aui_reasoning-text"]')?.textContent).toBe(
       'The user is asking what this file is.'
@@ -715,7 +704,7 @@ describe('assistant-ui streaming renderer', () => {
   it('groups consecutive reasoning parts under one thinking disclosure', () => {
     const { container } = render(<GroupedReasoningHarness />)
 
-    const disclosures = container.querySelectorAll('[data-slot="aui_thinking-disclosure"]')
+    const disclosures = container.querySelectorAll('[data-slot="processing-details"]')
     expect(disclosures.length).toBe(1)
 
     fireEvent.click(disclosures[0].querySelector('button')!)
@@ -729,12 +718,11 @@ describe('assistant-ui streaming renderer', () => {
   it('does not reopen an earlier completed thinking group when a later group is running', () => {
     const { container } = render(<RunningMessageHarness message={assistantSeparatedReasoningMessage()} />)
 
-    const disclosures = container.querySelectorAll('[data-slot="aui_thinking-disclosure"]')
-    expect(disclosures.length).toBe(2)
+    const disclosures = container.querySelectorAll('[data-slot="processing-details"]')
+    expect(disclosures.length).toBe(1)
 
     expect(disclosures[0].querySelector('button')?.getAttribute('aria-expanded')).toBe('false')
-    expect(disclosures[1].querySelector('button')?.getAttribute('aria-expanded')).toBe('true')
-    expect(container.textContent).not.toContain('Complete first thought.')
+    expect(within(container).getByText('Complete first thought.').closest('[hidden]')).toBeTruthy()
     expect(container.textContent).toContain('Interim answer.')
   })
 

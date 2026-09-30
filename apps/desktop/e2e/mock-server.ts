@@ -67,6 +67,7 @@ export interface MockServer {
 // tool_calls response, then re-calls the API, advancing to the next turn.
 
 export interface ScriptedTurn {
+  reasoning?: string
   /** Assistant text content to stream. Empty string = no visible text. */
   text: string
   /** Tool calls to emit. Empty array = final turn (finish_reason: stop). */
@@ -395,6 +396,7 @@ function includesBlockingClarifyTrigger(value: unknown): boolean {
  * @returns a handle with `port`, `url`, received user prompts, and `close()`.
  */
 export function startMockServer(options: MockServerOptions = {}): Promise<MockServer> {
+  let processingStep = 0
   return new Promise((resolve, reject) => {
     const receivedPrompts: string[] = []
     let resolveHeldStreamStarted: (() => void) | null = null
@@ -484,6 +486,16 @@ export function startMockServer(options: MockServerOptions = {}): Promise<MockSe
             _receivedUserTexts.push(userText)
           }
           const isInterimTrigger = userText.includes('E2E_INTERIM_TRIGGER')
+          if (userText.includes('E2E_PROCESSING_DETAILS')) {
+            const step = processingStep++
+            _scriptIndex++
+            const turn: ScriptedTurn = step < 3
+              ? { text: '', reasoning: `Checking local step ${step + 1}.`, toolCalls: [{ name: 'terminal', args: { command: 'echo processing-disclosure-check' } }] }
+              : { text: 'Processing disclosure verification complete.' }
+            if (stream) streamScriptedTurn(res, model, turn)
+            else nonStreamingScriptedTurn(res, model, turn)
+            return
+          }
           const isSidebarTrigger = userText.includes('E2E_SIDEBAR_TRIGGER')
           const isSidebarCrossTrigger = userText.includes('E2E_SIDEBAR_CROSS')
           const isQueueStopTrigger = userText.includes('E2E_QUEUE_STOP_TRIGGER')
@@ -782,6 +794,8 @@ function streamScriptedTurn(
   const hasToolCalls = turn.toolCalls && turn.toolCalls.length > 0
   const finishReason = hasToolCalls ? 'tool_calls' : 'stop'
 
+  if (turn.reasoning) res.write(sseChunk(model, { reasoning_content: turn.reasoning }))
+
   // If there's no text to stream, go straight to the tool_calls / finish.
   if (!turn.text) {
     if (hasToolCalls) {
@@ -848,6 +862,7 @@ function nonStreamingScriptedTurn(
   const finishReason = hasToolCalls ? 'tool_calls' : 'stop'
 
   const message: Record<string, unknown> = { role: 'assistant' }
+  if (turn.reasoning) message.reasoning_content = turn.reasoning
   if (turn.text) {
     message.content = turn.text
   }

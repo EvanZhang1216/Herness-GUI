@@ -20,6 +20,7 @@ import {
 } from '@/components/assistant-ui/thread/content'
 import { MESSAGE_PARTS_COMPONENTS } from '@/components/assistant-ui/thread/message-parts'
 import { ReactionPicker } from '@/components/assistant-ui/thread/message-reactions'
+import { ProcessingMessageParts } from '@/components/assistant-ui/thread/processing-details'
 import { ResponseLoadingIndicator, TurnActivityIndicator } from '@/components/assistant-ui/thread/status'
 import { MessageTimelineTimestamp } from '@/components/assistant-ui/thread/timeline-timestamp'
 import { useMessageReactions, useTapbackDoubleClick } from '@/components/assistant-ui/thread/use-message-reactions'
@@ -63,6 +64,7 @@ const EMPTY_PARTS: readonly unknown[] = []
 // descend into the parts subtree at all. Its props were already the module
 // constant MESSAGE_PARTS_COMPONENTS, so nothing per-message is captured here.
 const MESSAGE_PARTS = <MessagePrimitive.Parts components={MESSAGE_PARTS_COMPONENTS} />
+const PROCESSING_MESSAGE_PARTS = <ProcessingMessageParts />
 
 interface MessageActionProps {
   messageId: string
@@ -233,7 +235,7 @@ const AssistantMessageBody: FC<AssistantMessageProps & { collapsedNotice?: null 
             data-slot="aui_assistant-message-content"
           >
             {/* Todos render in the composer status stack now, not inline. */}
-            {MESSAGE_PARTS}
+            {PROCESSING_MESSAGE_PARTS}
             <AssistantStatusSlot />
             <AssistantPreviewEmbeds />
             <MessagePrimitive.Error>

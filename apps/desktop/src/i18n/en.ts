@@ -3,6 +3,11 @@ import { FIELD_DESCRIPTIONS, FIELD_LABELS } from '@/app/settings/constants'
 import type { Translations } from './types'
 
 export const en: Translations = {
+  processingDetails: {
+    title: 'Processing details',
+    running: 'Processing…',
+    steps: (count: number) => `${count} steps`
+  },
   sessionImport: {
     title: 'Continue from another app',
     subtitle: 'Bring a conversation into Hermes and pick up where you left off.',
