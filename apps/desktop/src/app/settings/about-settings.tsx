@@ -19,6 +19,7 @@ import {
 } from '@/store/updates'
 
 import { ListRow, SectionHeading, SettingsContent } from './primitives'
+import { StorageSettings } from './storage-settings'
 import { UninstallSection } from './uninstall-section'
 
 const RELEASE_NOTES_URL = 'https://github.com/EvanZhang1216/Herness-GUI/releases'
@@ -228,6 +229,7 @@ export function AboutSettings() {
           title={a.automaticUpdates}
         />
 
+        <StorageSettings />
         <UninstallSection />
       </div>
     </SettingsContent>

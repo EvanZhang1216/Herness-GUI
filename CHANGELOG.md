@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.1 — 2026-09-30
+
+- Choose a separate user data directory during first installation. Upgrades preserve it.
+- Settings → About can migrate Hermes and Electron data together after graceful shutdown.
+- Verify every copied file before committing the location; preserve original data on success or failure.
+- Reject overlapping/nonempty destinations and retain legacy paths until explicitly migrated.
+- Validation: 43 focused tests, plus packaged migration via settings IPC, Chinese paths,
+  credentials/history retention and continued chat after migration.
+
+
 ## 0.1.0 — 2026-09-30
 
 - Independent Windows x64 distribution with bundled Python, locked Hermes core

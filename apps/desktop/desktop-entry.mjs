@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { app, dialog } from 'electron'
+import { prepareStorage, registerStorage } from './distribution-storage.mjs'
 
 const directory = path.dirname(fileURLToPath(import.meta.url))
 const root = app.isPackaged ? process.resourcesPath : path.resolve(directory, '../..')
@@ -15,7 +16,9 @@ if (!existsSync(python) || !existsSync(path.join(source, 'hermes_cli/main.py')))
   // The installer owns code/runtime; the user owns data in a separate directory.
   process.env.HERMES_DESKTOP_HERMES_ROOT = source
   process.env.HERMES_DESKTOP_PYTHON = python
-  process.env.HERMES_HOME ??= path.join(process.env.LOCALAPPDATA || app.getPath('appData'), 'HernessGUI')
+  let storage
+  try { storage = prepareStorage({ root, python }) }
+  catch (error) { dialog.showErrorBox('无法打开用户数据目录', error.message); app.exit(1); throw error }
   process.env.HERMES_DESKTOP_APP_NAME ??= 'Herness GUI'
   process.env.PYTHONNOUSERSITE = '1'
   delete process.env.PYTHONHOME
@@ -31,4 +34,5 @@ if (!existsSync(python) || !existsSync(path.join(source, 'hermes_cli/main.py')))
   await import('./dist/electron-main.mjs')
   const { registerDistributionUpdates } = await import('./dist/distribution-updates.mjs')
   registerDistributionUpdates({ source })
+  registerStorage(storage)
 }

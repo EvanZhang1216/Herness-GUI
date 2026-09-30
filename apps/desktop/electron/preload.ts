@@ -499,6 +499,11 @@ contextBridge.exposeInMainWorld('hermesDesktop', {
     summary: () => ipcRenderer.invoke('hermes:uninstall:summary'),
     run: mode => ipcRenderer.invoke('hermes:uninstall:run', { mode })
   },
+  storage: {
+    info: () => ipcRenderer.invoke('herness:storage:info'),
+    choose: () => ipcRenderer.invoke('herness:storage:choose'),
+    migrate: target => ipcRenderer.invoke('herness:storage:migrate', target),
+  },
   updates: {
     check: () => ipcRenderer.invoke('hermes:updates:check'),
     apply: opts => ipcRenderer.invoke('hermes:updates:apply', opts),

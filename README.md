@@ -5,11 +5,11 @@
 - 源码：https://github.com/EvanZhang1216/Herness-GUI
 - 安装与更新：https://github.com/EvanZhang1216/Herness-GUI/releases
 - 上游：https://github.com/NousResearch/hermes-agent
-- 当前版本：0.1.0；初始源码包 2026.9.7，后端版本 0.21.1。来源记录见 upstream.json。
+- 当前版本：0.1.1；初始源码包 2026.9.7，后端版本 0.21.1。来源记录见 upstream.json。
 
 ## 安装与离线范围
 
-下载 Release 中的 `Herness-GUI-Setup-0.1.0-x64.exe`，双击选择安装目录。目标平台 Windows 10/11 x64，其他系统和架构尚未验证。
+下载 Release 中的 `Herness-GUI-Setup-0.1.1-x64.exe`，双击选择安装目录。目标平台 Windows 10/11 x64，其他系统和架构尚未验证。
 
 安装包包含 Electron 界面、Hermes 后端、便携 Python 3.11.15、锁定的核心/Web/MCP/Anthropic 依赖、Node/npm、Git/Bash、uv、ripgrep。安装机不必预装开发环境；Python 所需 VC runtime DLL 随便携发行版提供。安装时不会再下载 Hermes 或 Python。
 
@@ -17,7 +17,11 @@
 
 这是未做商业 Authenticode 签名的独立构建，不是 Nous Research 官方安装包。
 
-用户数据默认在 `%LOCALAPPDATA%\HernessGUI`，与程序目录分开。升级安装包不覆盖聊天数据库或 API Key。显式 HERMES_HOME 可覆盖位置。旧 Hermes 数据不会自动迁移或删除；可使用会话导入，或备份后通过 HERMES_HOME 指向旧目录。避免不同版本同时写同一数据库。
+首次安装可在“用户数据目录”页面选择空文件夹；升级安装保留现有目录。新目录中 `hermes` 保存聊天数据库、配置、密钥、记忆和技能，`desktop` 保存 Electron 本地界面设置、连接和浏览器存储。旧版本数据位置保持兼容，不自动搬动。
+
+设置 → 关于 → **用户数据位置** 可浏览或输入新的空目录，点击“迁移并重启”。先结束任务并关闭独立网关；程序正常退出后复制全部文件，逐文件 SHA-256 校验成功才切换，原目录保留作备份。失败继续使用原目录，错误框会提示原因；目标中的不完整副本不覆盖、也不自动删除。迁移期间请勿启动其他 Hermes 实例，目录含符号链接时需先处理链接。
+
+外部项目工作区、远程服务器数据及其他独立 Hermes 安装不在迁移范围内。`%LOCALAPPDATA%\HernessGUI-bootstrap` 只保存目录指针和迁移事务记录。自定义磁盘不可用时明确报错，不创建空白历史。显式 HERMES_HOME / HERMES_DESKTOP_USER_DATA_DIR 仍优先，但这种启动方式禁用设置迁移，需移除环境覆盖后使用。
 
 ## Hermes 能力覆盖
 

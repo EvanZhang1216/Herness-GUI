@@ -523,6 +523,11 @@ declare global {
       /** Restart the app in place — loads the swapped bundle when bundleSwapPending. */
       relaunchApp?: () => Promise<void>
       getRemoteDisplayReason?: () => Promise<string | null>
+      storage: {
+        info: () => Promise<{ home: string; desktop: string; root: string | null; external: boolean }>
+        choose: () => Promise<string | null>
+        migrate: (target: string) => Promise<{ scheduled: boolean }>
+      }
       updates: {
         check: () => Promise<DesktopUpdateStatus>
         apply: (opts?: DesktopUpdateApplyOptions) => Promise<DesktopUpdateApplyResult>

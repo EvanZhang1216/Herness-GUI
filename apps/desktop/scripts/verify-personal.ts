@@ -5,7 +5,13 @@ import { startMockServer, MOCK_REPLY } from '../e2e/mock-server'
 
 const root = path.resolve(import.meta.dirname, '../../..')
 const sandbox = path.join(root, 'verification', `desktop-${Date.now()}`)
-const home = path.join(sandbox, 'home')
+const initialRoot = path.join(sandbox, 'original-data')
+const home = path.join(initialRoot, 'hermes')
+const local = path.join(sandbox, 'local-app-data')
+const bootstrap = path.join(local, 'HernessGUI-bootstrap')
+fs.mkdirSync(bootstrap, { recursive: true })
+fs.mkdirSync(initialRoot, { recursive: true })
+fs.writeFileSync(path.join(bootstrap, 'location.txt'), initialRoot)
 fs.mkdirSync(home, { recursive: true })
 const mock = await startMockServer()
 fs.writeFileSync(path.join(home, 'config.yaml'), `model:
@@ -31,8 +37,7 @@ Object.assign(env, {
   PATH: `${process.env.SystemRoot}\\System32;${process.env.SystemRoot}`,
   HTTP_PROXY: 'http://127.0.0.1:9', HTTPS_PROXY: 'http://127.0.0.1:9',
   NO_PROXY: '127.0.0.1,localhost',
-  HERMES_HOME: home,
-  HERMES_DESKTOP_USER_DATA_DIR: path.join(sandbox, 'electron'),
+  LOCALAPPDATA: local,
   HERMES_DESKTOP_APP_NAME: `HermesVerification-${Date.now()}`,
   HERMES_DESKTOP_SKIP_QUIT_CONFIRM: '1',
 })
@@ -73,12 +78,46 @@ try {
   await expect(restored.getByText(MOCK_REPLY, { exact: false })).toHaveCount(2, { timeout: 90000 })
   await restored.screenshot({ path: path.join(root, 'verification', 'desktop-resumed.png') })
   console.log('PASS: restart EXE, restore saved conversation, submit follow-up and render second reply')
+  const moved = path.join(sandbox, '迁移后的完整数据')
+  await app.evaluate(({ app, dialog }) => {
+    // Accept the native confirmation while keeping relaunch under test control.
+    dialog.showMessageBox = async () => ({ response: 0, checkboxChecked: false })
+    app.relaunch = () => {}
+  })
+  const closed = app.waitForEvent('close')
+  const scheduled = await restored.evaluate(target => window.hermesDesktop.storage.migrate(target), moved)
+  expect(scheduled.scheduled).toBe(true)
+  await closed
+  app = undefined
+  expect(fs.existsSync(path.join(bootstrap, 'migration.json'))).toBe(true)
+  const migrationEnv = { ...env }
+  app = await electron.launch({
+    executablePath: path.join(root, 'apps/desktop/release/win-unpacked/Herness GUI.exe'), env: migrationEnv, timeout: 90000,
+  })
+  const migrated = await app.firstWindow()
+  await app.evaluate(({ BrowserWindow }) => { for (const window of BrowserWindow.getAllWindows()) window.hide() })
+  await expect(migrated.getByRole('button', { name: 'Gateway ready', exact: true })).toBeVisible({ timeout: 90000 })
+  await expect(migrated.getByText(MOCK_REPLY, { exact: false })).toHaveCount(2, { timeout: 30000 })
+  const storage = await migrated.evaluate(() => window.hermesDesktop.storage.info())
+  expect(storage.home).toBe(path.join(moved, 'hermes'))
+  expect(storage.desktop).toBe(path.join(moved, 'desktop'))
+  expect(fs.readFileSync(path.join(moved, 'hermes', '.env'), 'utf8')).toContain('MOCK_API_KEY=local-test-only')
+  expect(fs.existsSync(home)).toBe(true)
+  const movedComposer = migrated.locator('[contenteditable="true"]').first()
+  await movedComposer.pressSequentially('Continue after moving all user data.', { delay: 30 })
+  await movedComposer.press('Enter')
+  await expect(migrated.getByText(MOCK_REPLY, { exact: false })).toHaveCount(3, { timeout: 90000 })
+  console.log('PASS: full Hermes and Electron data migration, credentials retained, history resumed with another reply')
   await app.close()
   const freshHome = path.join(sandbox, 'fresh-home')
   fs.mkdirSync(freshHome, { recursive: true })
+  const freshLocal = path.join(sandbox, 'fresh-local')
+  fs.mkdirSync(path.join(freshLocal, 'HernessGUI-bootstrap'), { recursive: true })
+  fs.writeFileSync(path.join(freshLocal, 'HernessGUI-bootstrap', 'location.txt'), '\uFEFF' + freshHome, 'utf16le')
+  const freshEnv = { ...migrationEnv, LOCALAPPDATA: freshLocal }
   app = await electron.launch({
     executablePath: path.join(root, 'apps/desktop/release/win-unpacked/Herness GUI.exe'),
-    env: { ...env, HERMES_HOME: freshHome, HERMES_DESKTOP_USER_DATA_DIR: path.join(sandbox, 'fresh-electron') },
+    env: freshEnv,
     timeout: 60000,
   })
   const fresh = await app.firstWindow()
@@ -86,6 +125,7 @@ try {
   await expect(fresh.getByRole('button', { name: "I'll choose a provider later", exact: true })).toBeVisible({ timeout: 90000 })
   await fresh.getByRole('button', { name: "I'll choose a provider later", exact: true }).click()
   await expect(fresh.locator('[contenteditable="true"]').first()).toBeVisible({ timeout: 30000 })
+  expect((await fresh.evaluate(() => window.hermesDesktop.storage.info())).home).toBe(path.join(freshHome, 'hermes'))
   await fresh.screenshot({ path: path.join(root, 'verification', 'desktop-first-run.png') })
   console.log('PASS: first run with empty user data and no API credentials opens model onboarding')
   console.log(`Sandbox: ${sandbox}`)
