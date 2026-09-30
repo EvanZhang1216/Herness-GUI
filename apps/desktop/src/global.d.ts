@@ -523,6 +523,17 @@ declare global {
       /** Restart the app in place — loads the swapped bundle when bundleSwapPending. */
       relaunchApp?: () => Promise<void>
       getRemoteDisplayReason?: () => Promise<string | null>
+      account: {
+        info: () => Promise<import('./store/account').AccountState>
+        guest: () => Promise<import('./store/account').AccountState>
+        authenticate: (input: import('./store/account').AccountCredentials) => Promise<import('./store/account').AccountState>
+        logout: () => Promise<import('./store/account').AccountState>
+        sync: () => Promise<import('./store/account').AccountState>
+        apply: () => Promise<import('./store/account').AccountState>
+        devices: () => Promise<Array<{ id: string; name: string; last_seen_at: string; revoked_at: string | null }>>
+        revoke: (id: string) => Promise<{ ok: boolean }>
+        onChanged: (callback: (value: import('./store/account').AccountState) => void) => () => void
+      }
       storage: {
         info: () => Promise<{ home: string; desktop: string; root: string | null; external: boolean }>
         choose: () => Promise<string | null>

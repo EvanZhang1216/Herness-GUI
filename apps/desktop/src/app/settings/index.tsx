@@ -42,6 +42,7 @@ import { OverlayMain, OverlayNav, type OverlayNavGroup, OverlaySplitLayout } fro
 import { OverlayView } from '../overlays/overlay-view'
 import { SKILLS_ROUTE } from '../routes'
 
+import { AccountSettings } from './account-settings'
 import { AboutSettings } from './about-settings'
 import { AppearanceSettings } from './appearance-settings'
 import { BillingSettings } from './billing'
@@ -69,7 +70,8 @@ const SETTINGS_VIEWS: readonly SettingsViewId[] = [
   'billing',
   'plugins',
   'sessions',
-  'about'
+  'about',
+  'account'
 ]
 
 export function SettingsView({ onClose, onConfigSaved, onMainModelChanged }: SettingsPageProps) {
@@ -295,6 +297,7 @@ export function SettingsView({ onClose, onConfigSaved, onMainModelChanged }: Set
         label: t.settings.nav.archivedChats,
         onSelect: () => setActiveView('sessions')
       },
+      { active: activeView === 'account', icon: codiconIcon('account'), id: 'account', label: '账号与同步', onSelect: () => setActiveView('account') },
       {
         active: activeView === 'about',
         gapBefore: true,
@@ -392,7 +395,7 @@ export function SettingsView({ onClose, onConfigSaved, onMainModelChanged }: Set
   const activeSettingsContent =
     activeView === 'config:appearance' ? (
       <AppearanceSettings />
-    ) : activeView === 'about' ? (
+    ) : activeView === 'account' ? (<AccountSettings />) : activeView === 'about' ? (
       <AboutSettings />
     ) : activeView === 'gateway' || activeView === 'connections' ? (
       // 'connections' renders the unified page too so the frame before

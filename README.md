@@ -5,11 +5,11 @@
 - 源码：https://github.com/EvanZhang1216/Herness-GUI
 - 安装与更新：https://github.com/EvanZhang1216/Herness-GUI/releases
 - 上游：https://github.com/NousResearch/hermes-agent
-- 当前版本：0.1.1；初始源码包 2026.9.7，后端版本 0.21.1。来源记录见 upstream.json。
+- 当前版本：0.2.0；初始源码包 2026.9.7，后端版本 0.21.1。来源记录见 upstream.json。
 
 ## 安装与离线范围
 
-下载 Release 中的 `Herness-GUI-Setup-0.1.1-x64.exe`，双击选择安装目录。目标平台 Windows 10/11 x64，其他系统和架构尚未验证。
+下载 Release 中的 `Herness-GUI-Setup-0.2.0-x64.exe`，双击选择安装目录。目标平台 Windows 10/11 x64，其他系统和架构尚未验证。
 
 安装包包含 Electron 界面、Hermes 后端、便携 Python 3.11.15、锁定的核心/Web/MCP/Anthropic 依赖、Node/npm、Git/Bash、uv、ripgrep。安装机不必预装开发环境；Python 所需 VC runtime DLL 随便携发行版提供。安装时不会再下载 Hermes 或 Python。
 
@@ -22,6 +22,18 @@
 设置 → 关于 → **用户数据位置** 可浏览或输入新的空目录，点击“迁移并重启”。先结束任务并关闭独立网关；程序正常退出后复制全部文件，逐文件 SHA-256 校验成功才切换，原目录保留作备份。失败继续使用原目录，错误框会提示原因；目标中的不完整副本不覆盖、也不自动删除。迁移期间请勿启动其他 Hermes 实例，目录含符号链接时需先处理链接。
 
 外部项目工作区、远程服务器数据及其他独立 Hermes 安装不在迁移范围内。`%LOCALAPPDATA%\HernessGUI-bootstrap` 只保存目录指针和迁移事务记录。自定义磁盘不可用时明确报错，不创建空白历史。显式 HERMES_HOME / HERMES_DESKTOP_USER_DATA_DIR 仍优先，但这种启动方式禁用设置迁移，需移除环境覆盖后使用。
+
+## 可选账号与多设备同步
+
+首次启动可选“暂不登录，使用本地模式”。设置 → 账号与同步可填写同步服务器地址，用用户名、密码、邮箱注册；邮箱仅登记，预留验证字段，暂不发送验证码或提供邮箱找回密码。
+
+登录账号使用独立数据空间，访客记录只在显式勾选导入后上传。每个账号及服务器相互隔离，完整数据目录迁移包含这些账号空间。登录令牌使用 Windows 系统凭据加密；模型 API Key 不上传，每台设备分别配置模型。
+
+登录后自动同步聊天及内嵌附件，也可手动同步；云端下载在重启时应用，避免改变进行中的对话。两台离线设备修改同一会话时保留冲突分支。外部文件路径、项目工作区、技能和运行中的工具不随聊天同步。
+
+**云端会话自最初创建起保留 180 天，整段会话、消息及上下文到期删除；继续聊天不延长期限。** 数据库备份保留 7 天，删除的数据可能在备份中额外留存至多 7 天。现有本地备份不会递归删除。
+
+服务端使用 PostgreSQL 16，默认每账号 256 MiB 配额。当前 ECS 服务仅监听回环地址，维护者可通过 SSH 隧道联调。**尚无公网 HTTPS 域名，普通用户暂时不能直接联网注册；本地模式正常可用。** 域名和证书就绪后可配置公网入口，客户端已保留地址设置。部署、表结构、清理与备份见 [server/README.md](server/README.md)。
 
 ## Hermes 能力覆盖
 
@@ -96,7 +108,9 @@ Python 上游测试用 scripts/run_tests.sh，不用裸 pytest。未复制上游
 
 它提交修改、推送 main，再用部署密钥同步已提交源码到 ECS。每次 main push 也会触发 Actions 同步，覆盖其他维护者的提交。不是对每次编辑器保存自动生成提交。AI 后续维护约定写在根目录 AGENTS.md。
 
-ECS：`/srv/herness-gui/current`；实际快照：`/srv/herness-gui/releases/<commit>`；提交标识：`/srv/herness-gui/REVISION`。仅用 git archive 上传已提交源码，不传用户记录、.env、私钥、node_modules 和运行时二进制。旧快照保留便于回退；服务器只保存源码，不运行 Windows EXE。
+ECS：`/srv/herness-gui/current`；实际快照：`/srv/herness-gui/releases/<commit>`；提交标识：`/srv/herness-gui/REVISION`。仅用 git archive 上传已提交源码，不传用户记录、.env、私钥、node_modules 和运行时二进制。旧快照保留便于回退；服务器不运行 Windows EXE。
+
+账号服务单独运行于 `/opt/herness-sync/current`，数据和受限备份在 `/srv/herness-sync`。服务端变更通过真实 PostgreSQL 测试后，源码同步完成再执行 `scripts/deploy-sync-service.ps1`，部署同一提交并检查健康状态。数据库凭据放在服务器 `/etc/herness-sync/server.env`，不进入源码镜像。
 
 本地部署密钥位于用户目录 `.ssh/herness_gui_deploy`。Actions Secrets：ECS_HOST、ECS_USER、ECS_SSH_KEY、ECS_KNOWN_HOSTS。密码和私钥绝不写入仓库。
 

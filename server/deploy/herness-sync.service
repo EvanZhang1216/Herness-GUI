@@ -1,0 +1,22 @@
+[Unit]
+Description=Herness account and chat synchronization API
+After=network.target postgresql-16.service
+Requires=postgresql-16.service
+
+[Service]
+User=herness-sync
+Group=herness-sync
+WorkingDirectory=/opt/herness-sync/current
+EnvironmentFile=/etc/herness-sync/server.env
+ExecStart=/opt/herness-sync/venv/bin/python -m uvicorn herness_sync.app:app --host 127.0.0.1 --port 18788 --workers 1 --proxy-headers --forwarded-allow-ips 127.0.0.1 --no-access-log
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/herness-sync
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

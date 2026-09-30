@@ -3,6 +3,12 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { startMockServer, MOCK_REPLY } from '../e2e/mock-server'
 
+async function allowLocalMode(page: import('@playwright/test').Page) {
+  await page.waitForFunction(() => !!window.hermesDesktop?.account)
+  const state = await page.evaluate(() => window.hermesDesktop.account.info())
+  if (!state.welcomed) await page.getByRole('button', { name: '暂不登录，使用本地模式', exact: true }).click()
+}
+
 const root = path.resolve(import.meta.dirname, '../../..')
 const sandbox = path.join(root, 'verification', `desktop-${Date.now()}`)
 const initialRoot = path.join(sandbox, 'original-data')
@@ -49,6 +55,7 @@ try {
     timeout: 60000,
   })
   const page = await app.firstWindow()
+  await allowLocalMode(page)
   await app.evaluate(({ BrowserWindow }) => { for (const window of BrowserWindow.getAllWindows()) window.hide() })
   page.on('pageerror', error => console.error('Renderer:', error.message))
   const composer = page.locator('[contenteditable="true"]').first()
@@ -57,10 +64,11 @@ try {
   const version = await page.evaluate(() => window.hermesDesktop.getVersion())
   expect(version.hermesRoot).toContain('resources')
   expect(version.hermesRoot).toContain('hermes')
-  await composer.click()
+  await composer.click({ force: true })
   await composer.pressSequentially('Hello, verify the desktop conversation.', { delay: 30 })
   await composer.press('Enter')
   await expect(page.getByText(MOCK_REPLY, { exact: false }).first()).toBeVisible({ timeout: 90000 })
+  await app.evaluate(({ BrowserWindow }) => { for (const window of BrowserWindow.getAllWindows()) window.showInactive() })
   await page.screenshot({ path: path.join(root, 'verification', 'desktop-chat.png') })
   console.log('PASS: packaged EXE -> real Hermes 2026.9.7 backend -> local mock inference -> rendered reply')
   await app.close()
@@ -68,14 +76,16 @@ try {
     executablePath: path.join(root, 'apps/desktop/release/win-unpacked/Herness GUI.exe'), env, timeout: 60000,
   })
   const restored = await app.firstWindow()
+  await allowLocalMode(restored)
   await app.evaluate(({ BrowserWindow }) => { for (const window of BrowserWindow.getAllWindows()) window.hide() })
   await expect(restored.getByRole('button', { name: 'Gateway ready', exact: true })).toBeVisible({ timeout: 90000 })
   await expect(restored.getByText(MOCK_REPLY, { exact: false }).first()).toBeVisible({ timeout: 30000 })
   const resumedComposer = restored.locator('[contenteditable="true"]').first()
-  await resumedComposer.click()
+  await resumedComposer.click({ force: true })
   await resumedComposer.pressSequentially('Continue this saved conversation.', { delay: 30 })
   await resumedComposer.press('Enter')
   await expect(restored.getByText(MOCK_REPLY, { exact: false })).toHaveCount(2, { timeout: 90000 })
+  await app.evaluate(({ BrowserWindow }) => { for (const window of BrowserWindow.getAllWindows()) window.showInactive() })
   await restored.screenshot({ path: path.join(root, 'verification', 'desktop-resumed.png') })
   console.log('PASS: restart EXE, restore saved conversation, submit follow-up and render second reply')
   const moved = path.join(sandbox, '迁移后的完整数据')
@@ -95,6 +105,7 @@ try {
     executablePath: path.join(root, 'apps/desktop/release/win-unpacked/Herness GUI.exe'), env: migrationEnv, timeout: 90000,
   })
   const migrated = await app.firstWindow()
+  await allowLocalMode(migrated)
   await app.evaluate(({ BrowserWindow }) => { for (const window of BrowserWindow.getAllWindows()) window.hide() })
   await expect(migrated.getByRole('button', { name: 'Gateway ready', exact: true })).toBeVisible({ timeout: 90000 })
   await expect(migrated.getByText(MOCK_REPLY, { exact: false })).toHaveCount(2, { timeout: 30000 })
@@ -121,11 +132,13 @@ try {
     timeout: 60000,
   })
   const fresh = await app.firstWindow()
+  await allowLocalMode(fresh)
   await app.evaluate(({ BrowserWindow }) => { for (const window of BrowserWindow.getAllWindows()) window.hide() })
   await expect(fresh.getByRole('button', { name: "I'll choose a provider later", exact: true })).toBeVisible({ timeout: 90000 })
-  await fresh.getByRole('button', { name: "I'll choose a provider later", exact: true }).click()
+  await fresh.getByRole('button', { name: "I'll choose a provider later", exact: true }).click({ force: true })
   await expect(fresh.locator('[contenteditable="true"]').first()).toBeVisible({ timeout: 30000 })
   expect((await fresh.evaluate(() => window.hermesDesktop.storage.info())).home).toBe(path.join(freshHome, 'hermes'))
+  await app.evaluate(({ BrowserWindow }) => { for (const window of BrowserWindow.getAllWindows()) window.showInactive() })
   await fresh.screenshot({ path: path.join(root, 'verification', 'desktop-first-run.png') })
   console.log('PASS: first run with empty user data and no API credentials opens model onboarding')
   console.log(`Sandbox: ${sandbox}`)

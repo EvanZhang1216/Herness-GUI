@@ -24,5 +24,11 @@ This is an independent Windows distribution of Hermes Agent. The desktop is in
   never upload node_modules, personal data, logs or build credentials.
 - Validate with the focused Vitest suites plus the packaged EXE smoke test. Python
   tests for vendored Hermes use its `scripts/run_tests.sh`, never bare pytest.
+- Account/sync changes additionally require `server/run_tests.py` against the dedicated
+  PostgreSQL test database and `apps/desktop/scripts/verify-accounts.ts` against a private
+  test service. Never run database contract tests against production.
+- After validated server changes are published and mirrored, run
+  `scripts/deploy-sync-service.ps1` to deploy that committed revision and verify health.
+  Keep PostgreSQL and the API loopback-only until an HTTPS domain is configured.
 - Prefer upstream infrastructure over duplicating agents/tools. QuickModel-inspired
   UI features must preserve Hermes' session cache and role-alternation invariants.

@@ -2,7 +2,7 @@
   "name": "herness-gui",
   "productName": "Herness GUI",
   "private": true,
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Native desktop shell for Hermes Agent.",
   "author": "Nous Research",
   "repository": {
@@ -211,12 +211,19 @@
       "package.json",
       "desktop-entry.mjs",
       "distribution-storage.mjs",
-      "storage-core.mjs"
+      "storage-core.mjs",
+      "distribution-account.mjs",
+      "account-core.mjs"
     ],
     "beforeBuild": "scripts/before-build.mjs",
     "beforePack": "scripts/before-pack.mjs",
     "afterPack": "scripts/after-pack.mjs",
     "extraResources": [
+      {
+        "from": "sync-client",
+        "to": "sync-client",
+        "filter": ["*.py"]
+      },
       {
         "from": "build/install-stamp.json",
         "to": "install-stamp.json"

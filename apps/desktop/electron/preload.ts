@@ -499,6 +499,21 @@ contextBridge.exposeInMainWorld('hermesDesktop', {
     summary: () => ipcRenderer.invoke('hermes:uninstall:summary'),
     run: mode => ipcRenderer.invoke('hermes:uninstall:run', { mode })
   },
+  account: {
+    info: () => ipcRenderer.invoke('herness:account:info'),
+    guest: () => ipcRenderer.invoke('herness:account:guest'),
+    authenticate: input => ipcRenderer.invoke('herness:account:authenticate', input),
+    logout: () => ipcRenderer.invoke('herness:account:logout'),
+    sync: () => ipcRenderer.invoke('herness:account:sync'),
+    apply: () => ipcRenderer.invoke('herness:account:apply'),
+    devices: () => ipcRenderer.invoke('herness:account:devices'),
+    revoke: id => ipcRenderer.invoke('herness:account:revoke', id),
+    onChanged: callback => {
+      const listener = (_event, value) => callback(value)
+      ipcRenderer.on('herness:account:changed', listener)
+      return () => ipcRenderer.removeListener('herness:account:changed', listener)
+    },
+  },
   storage: {
     info: () => ipcRenderer.invoke('herness:storage:info'),
     choose: () => ipcRenderer.invoke('herness:storage:choose'),

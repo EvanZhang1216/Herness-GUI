@@ -3,6 +3,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { app, dialog } from 'electron'
 import { prepareStorage, registerStorage } from './distribution-storage.mjs'
+import { prepareAccounts, registerAccounts } from './distribution-account.mjs'
 
 const directory = path.dirname(fileURLToPath(import.meta.url))
 const root = app.isPackaged ? process.resourcesPath : path.resolve(directory, '../..')
@@ -31,8 +32,10 @@ if (!existsSync(python) || !existsSync(path.join(source, 'hermes_cli/main.py')))
     path.join(runtime, 'git/cmd'), path.join(runtime, 'git/bin'),
     process.env[pathKey] || '',
   ].join(path.delimiter)
+  const accounts = prepareAccounts(storage, { python, source, directory })
   await import('./dist/electron-main.mjs')
   const { registerDistributionUpdates } = await import('./dist/distribution-updates.mjs')
   registerDistributionUpdates({ source })
   registerStorage(storage)
+  registerAccounts(accounts)
 }

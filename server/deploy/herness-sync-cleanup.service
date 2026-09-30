@@ -1,0 +1,16 @@
+[Unit]
+Description=Expire Herness cloud data and orphaned attachments
+After=postgresql-16.service
+
+[Service]
+Type=oneshot
+User=herness-sync
+Group=herness-sync
+WorkingDirectory=/opt/herness-sync/current
+EnvironmentFile=/etc/herness-sync/server.env
+ExecStart=/opt/herness-sync/venv/bin/python -m herness_sync.manage cleanup
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/herness-sync
+UMask=0077

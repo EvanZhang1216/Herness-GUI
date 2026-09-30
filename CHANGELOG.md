@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.2.0 — 2026-09-30
+
+- Optional username/password/email accounts, with guest mode and isolated account data.
+  Email is recorded only; verification fields are reserved, no email is sent.
+- PostgreSQL-backed multi-device conversation and embedded attachment sync, encrypted
+  local login tokens, revocable devices, optimistic versions and preserved conflict branches.
+- Apply downloaded history after restart to preserve running Hermes conversation context;
+  keep model credentials local and require per-device model configuration.
+- Conversation-level retention: expire 180 days from original creation, with daily cleanup
+  and seven-day private database backups. Default account quota is 256 MiB.
+- Private ECS service deployment and SSH development tunnel. Public login requires a
+  future HTTPS domain; no public plaintext authentication endpoint is provided.
+- Validation: 45 focused desktop tests; two real PostgreSQL/HTTP/Hermes integration
+  contracts covering isolation, retries, attachments, expiration and offline conflicts;
+  packaged two-device registration/login/history continuation; guest chat, restart,
+  full data migration and empty-home onboarding regression tests.
+
 ## 0.1.1 — 2026-09-30
 
 - Choose a separate user data directory during first installation. Upgrades preserve it.
