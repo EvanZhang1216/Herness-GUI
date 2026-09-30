@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.3 — 2026-09-30
+
+- Add a prominent Model Settings shortcut directly below New Chat in the sidebar.
+- Link directly to custom API endpoints and provider API keys from model settings.
+- Verify the navigation with the packaged EXE, alongside chat, restart and data migration.
+
 ## 0.2.2 — 2026-09-30
 
 - Share model routing across desktop conversations within the account/profile, including

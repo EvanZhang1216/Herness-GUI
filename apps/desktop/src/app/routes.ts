@@ -9,6 +9,7 @@ type NavigateLike = (to: string, options?: { replace?: boolean }) => void
 export const SESSION_ROUTE_PREFIX = '/'
 export const NEW_CHAT_ROUTE = '/'
 export const SETTINGS_ROUTE = '/settings'
+export const MODEL_SETTINGS_ROUTE = `${SETTINGS_ROUTE}?tab=config:model`
 export const COMMAND_CENTER_ROUTE = '/command-center'
 export const SESSION_IMPORT_ROUTE = '/session-import'
 export const SKILLS_ROUTE = '/skills'

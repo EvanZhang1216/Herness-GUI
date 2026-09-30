@@ -138,6 +138,7 @@ import {
   ARTIFACTS_ROUTE,
   CRON_ROUTE,
   MESSAGING_ROUTE,
+  MODEL_SETTINGS_ROUTE,
   SESSION_IMPORT_ROUTE,
   SIDEBAR_NAV_AREA,
   type SidebarNavContribution,
@@ -204,6 +205,12 @@ const SIDEBAR_NAV: SidebarNavItem[] = [
     icon: props => <Codicon name="robot" {...props} />,
     action: 'new-session',
     keybindActionId: 'session.new'
+  },
+  {
+    id: 'model-settings',
+    label: '模型设置',
+    icon: props => <Codicon name="settings-gear" {...props} />,
+    route: MODEL_SETTINGS_ROUTE
   },
   {
     id: 'skills',
@@ -345,7 +352,7 @@ export function ChatSidebar({
 }: ChatSidebarProps) {
   const { t } = useI18n()
   const s = t.sidebar
-  const { pathname } = useLocation()
+  const { pathname, search } = useLocation()
   // Contributed nav rows (plugins pairing a page with a sidebar entry) render
   // below the built-ins with the same chrome; active = at their route.
   const navContributions = useContributions(SIDEBAR_NAV_AREA)
@@ -1502,6 +1509,8 @@ export function ChatSidebar({
                 const isInteractive = Boolean(item.action) || Boolean(item.route)
 
                 const active =
+                  (item.id === 'model-settings' && currentView === 'settings' &&
+                    (!new URLSearchParams(search).get('tab') || new URLSearchParams(search).get('tab') === 'config:model')) ||
                   (item.id === 'skills' && currentView === 'skills') ||
                   (item.id === 'messaging' && currentView === 'messaging') ||
                   (item.id === 'artifacts' && currentView === 'artifacts') ||
@@ -1526,6 +1535,7 @@ export function ChatSidebar({
                       'flex h-7 w-full justify-start gap-2 rounded-md border border-transparent px-2 text-left text-[0.8125rem] font-medium text-(--ui-text-secondary) transition-colors duration-100 ease-out [-webkit-app-region:no-drag] hover:bg-(--ui-control-hover-background) hover:text-foreground hover:transition-none',
                       active &&
                         'border-(--ui-stroke-tertiary) bg-(--ui-control-active-background) text-foreground shadow-none hover:border-(--ui-stroke-tertiary)!',
+                      item.id === 'model-settings' && 'bg-(--ui-control-active-background) text-(--ui-accent) font-semibold',
                       !isInteractive &&
                         'cursor-default hover:border-transparent hover:bg-transparent hover:text-inherit'
                     )}

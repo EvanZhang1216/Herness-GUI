@@ -5,11 +5,11 @@
 - 源码：https://github.com/EvanZhang1216/Herness-GUI
 - 安装与更新：https://github.com/EvanZhang1216/Herness-GUI/releases
 - 上游：https://github.com/NousResearch/hermes-agent
-- 当前版本：0.2.2；初始源码包 2026.9.7，后端版本 0.21.1。来源记录见 upstream.json。
+- 当前版本：0.2.3；初始源码包 2026.9.7，后端版本 0.21.1。来源记录见 upstream.json。
 
 ## 安装与离线范围
 
-下载 Release 中的 `Herness-GUI-Setup-0.2.2-x64.exe`，双击选择安装目录。目标平台 Windows 10/11 x64，其他系统和架构尚未验证。
+下载 Release 中的 `Herness-GUI-Setup-0.2.3-x64.exe`，双击选择安装目录。目标平台 Windows 10/11 x64，其他系统和架构尚未验证。
 
 安装包包含 Electron 界面、Hermes 后端、便携 Python 3.11.15、锁定的核心/Web/MCP/Anthropic 依赖、Node/npm、Git/Bash、uv、ripgrep。安装机不必预装开发环境；Python 所需 VC runtime DLL 随便携发行版提供。安装时不会再下载 Hermes 或 Python。
 
@@ -24,6 +24,8 @@
 外部项目工作区、远程服务器数据及其他独立 Hermes 安装不在迁移范围内。`%LOCALAPPDATA%\HernessGUI-bootstrap` 只保存目录指针和迁移事务记录。自定义磁盘不可用时明确报错，不创建空白历史。显式 HERMES_HOME / HERMES_DESKTOP_USER_DATA_DIR 仍优先，但这种启动方式禁用设置迁移，需移除环境覆盖后使用。
 
 ## 统一模型配置
+
+左侧“新建会话”下方常驻高亮的 **模型设置** 入口，一次点击打开主模型和子模型设置。页面顶部提供 **自定义 API · 地址 / 模型 / Key** 与 **API 密钥** 直达按钮，无需展开多层设置菜单。
 
 设置 → 模型中配置主模型、子智能体模型及对应提供方的 Base URL、模型名称和 API Key。同一账号及配置档案的所有桌面会话统一使用这组设置，包括旧会话和云端恢复的记录。聊天框模型选择也修改共享主模型，不再固定某一会话的模型。菜单标明共享范围；本轮正在运行时仍可显示实际运行模型，下一轮切换。
 
