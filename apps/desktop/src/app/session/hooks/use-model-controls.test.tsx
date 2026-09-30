@@ -675,6 +675,19 @@ describe('useModelControls', () => {
     })
   })
 
+  it('does not repaint another connection sharing the same profile name', async () => {
+    $activeSessionId.set('primary-runtime')
+    setCurrentModel('primary-model')
+    const queryClient = new QueryClient()
+    const { result } = renderHook(() => useModelControls({
+      cacheOwnerConnectionId: 'other-server', cacheProfile: 'default', queryClient,
+      requestGateway: vi.fn(async () => ({}) as never)
+    }))
+    await result.current.selectModel({ model: 'remote-model', provider: 'remote', sessionId: 'remote-runtime' })
+    expect($currentModel.get()).toBe('primary-model')
+    expect(queryClient.getQueryData(modelOptionsQueryKey('default', null, 'other-server'))).toMatchObject({ model: 'remote-model' })
+  })
+
   it('rolls a failed focused-B selection back only in B cache', async () => {
     const queryClient = new QueryClient()
     const ownerBKey = modelOptionsQueryKey('profile-b', 'runtime-b', 'connection-b')
