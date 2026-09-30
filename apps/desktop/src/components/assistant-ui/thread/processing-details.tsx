@@ -1,6 +1,7 @@
 import { MessagePrimitive, useAuiState } from '@assistant-ui/react'
 import { type ComponentProps, type PropsWithChildren, useState } from 'react'
 
+import { APPROVAL_TOOLS } from '@/components/assistant-ui/tool/approval'
 import { SCAFFOLD_META_CLASS, ScaffoldRow } from '@/components/chat/scaffold-row'
 import { useI18n } from '@/i18n'
 import { isTodoToolName } from '@/lib/todos'
@@ -12,6 +13,7 @@ interface ProcessPart {
   text?: string
   toolName?: string
   isError?: boolean
+  result?: unknown
   status?: { type: string }
 }
 
@@ -23,7 +25,9 @@ export function groupProcessingParts(parts: readonly ProcessPart[]) {
   const groups: { groupKey: string | undefined; indices: number[] }[] = []
   const process = { groupKey: 'process', indices: [] as number[] }
   parts.forEach((part, index) => {
-    const tool = part.type === 'tool-call' && !part.isError && part.status?.type !== 'requires-action' &&
+    const pendingApprovalTool = APPROVAL_TOOLS.has(part.toolName ?? '') && part.result === undefined
+
+    const tool = part.type === 'tool-call' && !part.isError && !pendingApprovalTool && part.status?.type !== 'requires-action' &&
       !STANDALONE_TOOLS.has(part.toolName ?? '') && !isTodoToolName(part.toolName ?? '')
 
     if ((part.type === 'reasoning' && Boolean(part.text?.trim())) || tool) {

@@ -41,10 +41,10 @@ it('collapses alternating reasoning and tools together while the answer stays vi
 it('keeps actions, failures, images and text outside the group without losing any original part', () => {
   const parts = [
     { type: 'reasoning', text: 'Reasoning' },
-    { type: 'tool-call', toolName: 'terminal' },
+    { type: 'tool-call', toolName: 'terminal', result: 'done' },
     { type: 'tool-call', toolName: 'clarify' },
     { type: 'tool-call', toolName: 'setup_mcp' },
-    { type: 'tool-call', toolName: 'terminal', status: { type: 'requires-action' } },
+    { type: 'tool-call', toolName: 'terminal' },
     { type: 'tool-call', toolName: 'terminal', isError: true },
     { type: 'tool-call', toolName: 'image_generate' },
     { type: 'tool-call', toolName: 'delegate_task' },
