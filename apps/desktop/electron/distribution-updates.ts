@@ -66,7 +66,8 @@ export function registerDistributionUpdates({ source }: { source: string }) {
       autoUpdater.autoInstallOnAppQuit = true
       autoUpdater.autoRunAppAfterInstall = true
       setTimeout(() => app.quit(), 500)
-      return { ok: true, handedOff: true }
+      return { ok: true, manualRestart: true,
+        message: '安装包已就绪。若取消退出，请在任务结束后关闭程序完成安装。' }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       publish('error', message)

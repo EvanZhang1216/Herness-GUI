@@ -26,6 +26,6 @@ jobs:
           printf '%s\n' "$ECS_SSH_KEY" > ~/.ssh/herness_gui_deploy
           chmod 600 ~/.ssh/herness_gui_deploy
           printf '%s\n' "$ECS_KNOWN_HOSTS" > ~/.ssh/known_hosts
-          git archive --format=tar --output=source.tar HEAD
-          scp -i ~/.ssh/herness_gui_deploy -o BatchMode=yes -o StrictHostKeyChecking=yes source.tar "$ECS_USER@$ECS_HOST:/srv/herness-gui/source-$GITHUB_SHA.tar"
-          ssh -i ~/.ssh/herness_gui_deploy -o BatchMode=yes -o StrictHostKeyChecking=yes "$ECS_USER@$ECS_HOST" "set -eu; mkdir -p /srv/herness-gui/releases/$GITHUB_SHA; tar -xf /srv/herness-gui/source-$GITHUB_SHA.tar -C /srv/herness-gui/releases/$GITHUB_SHA; ln -sfn releases/$GITHUB_SHA /srv/herness-gui/current; printf '%s\\n' $GITHUB_SHA > /srv/herness-gui/REVISION"
+          git archive --format=tar.gz --output=source.tar.gz HEAD
+          scp -i ~/.ssh/herness_gui_deploy -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=20 source.tar.gz "$ECS_USER@$ECS_HOST:/srv/herness-gui/source-$GITHUB_SHA.tar.gz"
+          ssh -i ~/.ssh/herness_gui_deploy -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=20 "$ECS_USER@$ECS_HOST" "set -eu; mkdir -p /srv/herness-gui/releases/$GITHUB_SHA; tar -xzf /srv/herness-gui/source-$GITHUB_SHA.tar.gz -C /srv/herness-gui/releases/$GITHUB_SHA; ln -sfn releases/$GITHUB_SHA /srv/herness-gui/current; printf '%s\\n' $GITHUB_SHA > /srv/herness-gui/REVISION"

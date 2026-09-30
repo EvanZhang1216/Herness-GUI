@@ -55,5 +55,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         shell: pwsh
         run: |
+          gh release view $env:GITHUB_REF_NAME *> $null
+          if ($LASTEXITCODE -eq 0) { Write-Output 'Release already published; preserving validated assets'; exit 0 }
           gh release create $env:GITHUB_REF_NAME --verify-tag --generate-notes --title "Herness GUI $env:GITHUB_REF_NAME" apps/desktop/release/*.exe apps/desktop/release/*.blockmap apps/desktop/release/latest.yml
           if ($LASTEXITCODE) { throw 'Release publication failed' }

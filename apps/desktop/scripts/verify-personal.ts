@@ -73,6 +73,21 @@ try {
   await expect(restored.getByText(MOCK_REPLY, { exact: false })).toHaveCount(2, { timeout: 90000 })
   await restored.screenshot({ path: path.join(root, 'verification', 'desktop-resumed.png') })
   console.log('PASS: restart EXE, restore saved conversation, submit follow-up and render second reply')
+  await app.close()
+  const freshHome = path.join(sandbox, 'fresh-home')
+  fs.mkdirSync(freshHome, { recursive: true })
+  app = await electron.launch({
+    executablePath: path.join(root, 'apps/desktop/release/win-unpacked/Herness GUI.exe'),
+    env: { ...env, HERMES_HOME: freshHome, HERMES_DESKTOP_USER_DATA_DIR: path.join(sandbox, 'fresh-electron') },
+    timeout: 60000,
+  })
+  const fresh = await app.firstWindow()
+  await app.evaluate(({ BrowserWindow }) => { for (const window of BrowserWindow.getAllWindows()) window.hide() })
+  await expect(fresh.getByRole('button', { name: "I'll choose a provider later", exact: true })).toBeVisible({ timeout: 90000 })
+  await fresh.getByRole('button', { name: "I'll choose a provider later", exact: true }).click()
+  await expect(fresh.locator('[contenteditable="true"]').first()).toBeVisible({ timeout: 30000 })
+  await fresh.screenshot({ path: path.join(root, 'verification', 'desktop-first-run.png') })
+  console.log('PASS: first run with empty user data and no API credentials opens model onboarding')
   console.log(`Sandbox: ${sandbox}`)
 } finally {
   if (app) await app.close()
