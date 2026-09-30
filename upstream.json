@@ -1,0 +1,9 @@
+{
+  "repository": "https://github.com/NousResearch/hermes-agent",
+  "release": "v2026.9.7",
+  "sourceArchive": "hermes-agent-2026.9.7.zip",
+  "sourceArchiveSha256": "58dd9a0e2ea097128082ae3211c21c75052616309f5eb81ccdb3d999ac1d3eea",
+  "backendVersion": "0.21.1",
+  "sourceCommit": null,
+  "note": "Initial source supplied as an archive without Git metadata. Do not infer a commit from the folder name."
+}

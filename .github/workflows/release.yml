@@ -1,0 +1,59 @@
+name: Build standalone Windows release
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22.23.1'
+          cache: npm
+      - name: Build tools
+        shell: pwsh
+        run: |
+          python -m pip install uv==0.11.29
+          if ($LASTEXITCODE) { throw 'uv installation failed' }
+          if (-not (Get-Command rg -ErrorAction SilentlyContinue)) { choco install ripgrep --version=15.2.0 -y }
+      - name: Dependencies and bundled runtime
+        shell: pwsh
+        run: |
+          npm ci
+          if ($LASTEXITCODE) { throw 'npm ci failed' }
+          ./scripts/prepare-runtime.ps1
+      - name: Verify version and focused tests
+        shell: pwsh
+        run: |
+          $version = (Get-Content apps/desktop/package.json -Raw | ConvertFrom-Json).version
+          if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -ne "v$version") { throw 'Tag/version mismatch' }
+          npm run test:focused
+          if ($LASTEXITCODE) { throw 'Tests failed' }
+      - name: Build installer
+        shell: pwsh
+        run: |
+          npm run build
+          if ($LASTEXITCODE) { throw 'Desktop build failed' }
+          npm run package
+          if ($LASTEXITCODE) { throw 'Packaging failed' }
+          npm run test:packaged
+          if ($LASTEXITCODE) { throw 'Packaged smoke test failed' }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: windows-installer
+          path: |
+            apps/desktop/release/*.exe
+            apps/desktop/release/*.blockmap
+            apps/desktop/release/latest.yml
+      - name: Publish validated release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: |
+          gh release create $env:GITHUB_REF_NAME --verify-tag --generate-notes --title "Herness GUI $env:GITHUB_REF_NAME" apps/desktop/release/*.exe apps/desktop/release/*.blockmap apps/desktop/release/latest.yml
+          if ($LASTEXITCODE) { throw 'Release publication failed' }

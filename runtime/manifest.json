@@ -1,0 +1,7 @@
+{
+  "python": "3.11.15",
+  "node": "v22.23.1",
+  "git": "git version 2.55.0.windows.3",
+  "uv": "0.11.29",
+  "ripgrep": "15.2.0"
+}

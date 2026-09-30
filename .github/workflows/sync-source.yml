@@ -1,0 +1,31 @@
+name: Mirror committed source to ECS
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ecs-source
+  cancel-in-progress: false
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Upload committed source and switch current revision
+        env:
+          ECS_SSH_KEY: ${{ secrets.ECS_SSH_KEY }}
+          ECS_KNOWN_HOSTS: ${{ secrets.ECS_KNOWN_HOSTS }}
+          ECS_HOST: ${{ secrets.ECS_HOST }}
+          ECS_USER: ${{ secrets.ECS_USER }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$ECS_SSH_KEY" > ~/.ssh/herness_gui_deploy
+          chmod 600 ~/.ssh/herness_gui_deploy
+          printf '%s\n' "$ECS_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          git archive --format=tar --output=source.tar HEAD
+          scp -i ~/.ssh/herness_gui_deploy -o BatchMode=yes -o StrictHostKeyChecking=yes source.tar "$ECS_USER@$ECS_HOST:/srv/herness-gui/source-$GITHUB_SHA.tar"
+          ssh -i ~/.ssh/herness_gui_deploy -o BatchMode=yes -o StrictHostKeyChecking=yes "$ECS_USER@$ECS_HOST" "set -eu; mkdir -p /srv/herness-gui/releases/$GITHUB_SHA; tar -xf /srv/herness-gui/source-$GITHUB_SHA.tar -C /srv/herness-gui/releases/$GITHUB_SHA; ln -sfn releases/$GITHUB_SHA /srv/herness-gui/current; printf '%s\\n' $GITHUB_SHA > /srv/herness-gui/REVISION"
