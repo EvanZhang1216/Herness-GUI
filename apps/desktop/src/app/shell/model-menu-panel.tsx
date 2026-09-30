@@ -18,7 +18,8 @@ import {
   $defaultReasoningEffort,
   markComposerSelectionManual,
   setCurrentFastMode,
-  setCurrentReasoningEffort
+  setCurrentReasoningEffort,
+  setDefaultReasoningEffort
 } from '@/store/session'
 import { sessionTileDelegate } from '@/store/session-states'
 import type { ModelOptionsResponse } from '@/types/hermes'
@@ -130,7 +131,7 @@ export function ModelMenuPanel({
     }
   }
 
-  // Push a reasoning change onto the session that owns it, with rollback.
+  // Save alongside the shared model, including before a draft has a session.
   const patchReasoning = async (next: string, previous: string, provider: string, model: string) => {
     if (touchesPrimary) {
       markComposerSelectionManual()
@@ -139,15 +140,12 @@ export function ModelMenuPanel({
       sessionTileDelegate()?.updateSession(activeSessionId, state => ({ ...state, reasoningEffort: next }))
     }
 
-    // Preset-only without a session: the gateway's `config.set` falls back to
-    // global config when none matches — so don't reach it (preset + optimistic
-    // store are the whole effect).
-    if (!activeSessionId) {
-      return
-    }
-
     try {
-      await requestGateway('config.set', { key: 'reasoning', session_id: activeSessionId, value: next })
+      await requestGateway('config.set', { key: 'reasoning', scope: 'global', session_id: activeSessionId || undefined, value: next })
+
+      if (touchesPrimary) {
+        setDefaultReasoningEffort(next)
+      }
     } catch (err) {
       if (touchesPrimary) {
         setCurrentReasoningEffort(previous)

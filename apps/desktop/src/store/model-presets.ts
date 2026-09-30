@@ -3,7 +3,7 @@ import { atom } from 'nanostores'
 import { persistString, storedString } from '@/lib/storage'
 
 import { notifyError } from './notifications'
-import { setCurrentFastMode, setCurrentReasoningEffort } from './session'
+import { setCurrentFastMode, setCurrentReasoningEffort, setDefaultReasoningEffort } from './session'
 import { sessionTileDelegate } from './session-states'
 
 const STORAGE_KEY = 'hermes.desktop.model-presets'
@@ -52,11 +52,10 @@ export function setModelPreset(provider: string, model: string, patch: ModelPres
   persistString(STORAGE_KEY, JSON.stringify(next))
 }
 
-/** Apply a model's preset to the composer, then push it to a live session.
+/** Apply a model's preset to the composer and save its reasoning to the profile.
  *  `undefined` skips that dimension; values are capability-gated upstream.
- *  Without a session the local draft still needs the preset, but must not call
- *  `config.set`: that falls back to persistent profile config when no session
- *  matches and would rewrite the user's defaults.
+ *  Reasoning follows the shared model even before a session exists. Fast mode
+ *  retains its session scope.
  *
  *  `primary: false` scopes the optimistic write to the tile's session slice —
  *  a tile's picker must not clobber the primary composer's effort/fast. */
@@ -80,16 +79,16 @@ export async function applyModelPreset(
     }))
   }
 
-  if (!ctx.sessionId) {
-    return
-  }
-
   try {
     if (effort !== undefined) {
-      await ctx.request('config.set', { key: 'reasoning', session_id: ctx.sessionId, value: effort })
+      await ctx.request('config.set', { key: 'reasoning', scope: 'global', session_id: ctx.sessionId || undefined, value: effort })
+
+      if (ctx.primary ?? true) {
+        setDefaultReasoningEffort(effort)
+      }
     }
 
-    if (fast !== undefined) {
+    if (fast !== undefined && ctx.sessionId) {
       await ctx.request('config.set', { key: 'fast', session_id: ctx.sessionId, value: fast ? 'fast' : 'normal' })
     }
   } catch (err) {

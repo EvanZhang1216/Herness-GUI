@@ -37,10 +37,10 @@ describe('model presets', () => {
     await applyModelPreset({ effort: 'high' }, { failMessage: 'x', request, sessionId: 's1' })
     await applyModelPreset({}, { failMessage: 'x', request, sessionId: 's1' })
 
-    expect(calls).toEqual([{ method: 'config.set', params: { key: 'reasoning', session_id: 's1', value: 'high' } }])
+    expect(calls).toEqual([{ method: 'config.set', params: { key: 'reasoning', scope: 'global', session_id: 's1', value: 'high' } }])
   })
 
-  it('applies a fresh-draft preset locally without mutating gateway config', async () => {
+  it('persists fresh-draft reasoning while keeping fast mode local', async () => {
     const calls: { method: string; params?: Record<string, unknown> }[] = []
 
     const request = async <T>(method: string, params?: Record<string, unknown>) => {
@@ -53,6 +53,6 @@ describe('model presets', () => {
 
     expect($currentReasoningEffort.get()).toBe('high')
     expect($currentFastMode.get()).toBe(true)
-    expect(calls).toEqual([])
+    expect(calls).toEqual([{ method: 'config.set', params: { key: 'reasoning', scope: 'global', session_id: undefined, value: 'high' } }])
   })
 })

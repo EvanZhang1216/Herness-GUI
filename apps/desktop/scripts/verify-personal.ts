@@ -1,6 +1,7 @@
 import { _electron as electron, expect } from '@playwright/test'
 import fs from 'node:fs'
 import path from 'node:path'
+import { load as parseYaml } from 'js-yaml'
 import { startMockServer, MOCK_REPLY } from '../e2e/mock-server'
 
 async function allowLocalMode(page: import('@playwright/test').Page) {
@@ -79,6 +80,14 @@ try {
   await expect(composer).toBeVisible()
   await app.evaluate(({ BrowserWindow }) => { for (const window of BrowserWindow.getAllWindows()) window.hide() })
   console.log('PASS: prominent model settings opens in one click; endpoint and API-key shortcuts reach their pages')
+  await app.evaluate(({ BrowserWindow }) => { for (const window of BrowserWindow.getAllWindows()) window.showInactive() })
+  await page.getByRole('button', { name: /Mock Model/ }).click()
+  await page.getByRole('menuitem', { name: /Mock Model/ }).first().hover()
+  await page.getByRole('menuitemradio', { name: 'High', exact: true }).click()
+  await expect.poll(() => (parseYaml(fs.readFileSync(path.join(home, 'config.yaml'), 'utf8')) as any).agent.reasoning_effort).toBe('high')
+  await page.keyboard.press('Escape')
+  await page.keyboard.press('Escape')
+  console.log('PASS: selecting reasoning in a fresh draft writes the profile configuration')
   await composer.click({ force: true })
   await composer.pressSequentially('Hello, verify the desktop conversation.', { delay: 30 })
   await composer.press('Enter')
@@ -95,6 +104,16 @@ try {
   await app.evaluate(({ BrowserWindow }) => { for (const window of BrowserWindow.getAllWindows()) window.hide() })
   await expect(restored.getByRole('button', { name: 'Gateway ready', exact: true })).toBeVisible({ timeout: 90000 })
   await expect(restored.getByText(MOCK_REPLY, { exact: false }).first()).toBeVisible({ timeout: 30000 })
+  await expect(restored.getByRole('button', { name: /Mock Model.*High/ })).toBeVisible({ timeout: 30000 })
+  await app.evaluate(({ BrowserWindow }) => { for (const window of BrowserWindow.getAllWindows()) window.showInactive() })
+  await restored.getByRole('button', { name: /Mock Model/ }).click()
+  await restored.getByRole('menuitem', { name: /Mock Model/ }).first().hover()
+  await expect(restored.getByRole('menuitemradio', { name: 'High', exact: true })).toHaveAttribute('aria-checked', 'true')
+  await restored.getByRole('switch').click()
+  await expect.poll(() => (parseYaml(fs.readFileSync(path.join(home, 'config.yaml'), 'utf8')) as any).agent.reasoning_effort).toBe('none')
+  await restored.keyboard.press('Escape')
+  await restored.keyboard.press('Escape')
+  console.log('PASS: High survives app restart; turning thinking off persists from a live session')
   const resumedComposer = restored.locator('[contenteditable="true"]').first()
   await resumedComposer.click({ force: true })
   await resumedComposer.pressSequentially('Continue this saved conversation.', { delay: 30 })
@@ -124,6 +143,8 @@ try {
   await app.evaluate(({ BrowserWindow }) => { for (const window of BrowserWindow.getAllWindows()) window.hide() })
   await expect(migrated.getByRole('button', { name: 'Gateway ready', exact: true })).toBeVisible({ timeout: 90000 })
   await expect(migrated.getByText(MOCK_REPLY, { exact: false })).toHaveCount(2, { timeout: 30000 })
+  await expect(migrated.getByRole('button', { name: /Mock Model.*Off/ })).toBeVisible({ timeout: 30000 })
+  console.log('PASS: thinking off survives another restart and user-data migration')
   const storage = await migrated.evaluate(() => window.hermesDesktop.storage.info())
   expect(storage.home).toBe(path.join(moved, 'hermes'))
   expect(storage.desktop).toBe(path.join(moved, 'desktop'))

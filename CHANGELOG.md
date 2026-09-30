@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.5 — 2026-10-01
+
+- Persist active-model reasoning effort and thinking-off selections to profile configuration, including fresh drafts.
+- Apply model reasoning presets through the same persistent configuration scope.
+- Verify reasoning selection, restart restoration and thinking-off persistence with the packaged EXE.
+
 ## 0.2.4 — 2026-10-01
 
 - Collapse reasoning and routine tool activity into one expandable processing summary per assistant message.
